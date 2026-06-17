@@ -7,12 +7,17 @@ to three live, editable, no-sign-up demo instances:
 - **SystemReady** — construction punch lists
 - **Docktrail** — dock / logistics tracking
 
-This repo is **only the hub** (a small Next.js site). Each tool runs as its own
-deploy in "demo mode" against its own demo Supabase project. See
-[`docs/demo-playground-design.md`](docs/demo-playground-design.md) for the full
-architecture and the per-tool demo recipe, and
-[`docs/demo_sandbox_reference.sql`](docs/demo_sandbox_reference.sql) for the
-ready-to-apply SystemReady reference migration that Tuesday and Docktrail mirror.
+This is a **single combined app**: one repo, one Vercel project, one Supabase
+project. The landing page lets a visitor pick a tool, and each tool's demo is
+mounted under its own path (`/tuesday`, `/systemready`, `/docktrail`), backed by
+its own schema in the shared `Demoland` Supabase project.
+
+The three tools' code is merged in from their source repos (`punchlist`,
+`Project-Tuesday`, `docktrail`). Until a tool is merged, its route shows a
+"being set up" placeholder. See
+[`docs/demo-playground-design.md`](docs/demo-playground-design.md) for the demo
+recipe and [`docs/demo_sandbox_reference.sql`](docs/demo_sandbox_reference.sql)
+for the ready-to-apply SystemReady reference migration the others mirror.
 
 ## Stack
 
@@ -27,32 +32,23 @@ npm run dev      # http://localhost:3000
 npm run build    # production build
 ```
 
-## Configuration
-
-The "Launch interactive demo" buttons are env-driven so the hub can point at the
-real demo subdomains without a code change. Copy `.env.example` to `.env.local`
-(or set these in Vercel → Project `demoland` → Environment Variables):
-
-| Variable | Purpose |
-|---|---|
-| `NEXT_PUBLIC_TUESDAY_DEMO_URL` | Tuesday demo URL |
-| `NEXT_PUBLIC_SYSTEMREADY_DEMO_URL` | SystemReady demo URL |
-| `NEXT_PUBLIC_DOCKTRAIL_DEMO_URL` | Docktrail demo URL |
-
-Tool names, taglines, descriptions, and accent colors live in
+Tool names, taglines, descriptions, accent colors, and routes live in
 [`src/lib/tools.ts`](src/lib/tools.ts).
+
+Supabase env vars (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+`SUPABASE_SERVICE_ROLE_KEY`) are added in Vercel → Project `demoland` once the
+tool demos are wired up.
 
 ## Architecture (summary)
 
 ```
-try.<brand>.com               → this hub (3 product cards)
-  ├── tuesday.try.<brand>.com     → Tuesday, demo mode
-  ├── systemready.try.<brand>.com → SystemReady, demo mode
-  └── docktrail.try.<brand>.com   → Docktrail, demo mode
+demoland.com/                 → pick-a-tool landing page
+  ├── /tuesday/...                → Tuesday, demo mode
+  ├── /systemready/...            → SystemReady, demo mode
+  └── /docktrail/...              → Docktrail, demo mode
 ```
 
-Each tool is gated behind `NEXT_PUBLIC_DEMO_MODE=1`; demo mode signs visitors in
-anonymously (Supabase `signInAnonymously()`), seeds an RLS-isolated workspace,
-shows a "resets daily" banner, and a scheduled job recycles stale guest data.
-The per-tool implementation is **not** in this repo — it lives in each tool's own
-repo (`punchlist`, `Project-Tuesday`, `docktrail`).
+One Vercel deploy, one `Demoland` Supabase project (each tool in its own Postgres
+schema). Demo mode signs visitors in anonymously (Supabase
+`signInAnonymously()`), seeds an RLS-isolated workspace per tool, shows a "resets
+daily" banner, and a scheduled job recycles stale guest data.

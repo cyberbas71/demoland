@@ -1,9 +1,9 @@
 // Central config for the three demo tools surfaced on the hub.
 //
-// Each tool is deployed independently (its own repo + Vercel project + demo
-// Supabase project) and is linked from here. Demo URLs are env-driven so the
-// hub can point at the real demo subdomains once DNS is assigned, without a
-// code change. Defaults are placeholders — override per environment in Vercel.
+// This is a single combined app: each tool's demo is mounted under its own
+// path (`/tuesday`, `/systemready`, `/docktrail`) and backed by its own schema
+// in the shared `Demoland` Supabase project. The landing page links to these
+// internal routes — no separate deployments.
 
 export type Tool = {
   slug: string;
@@ -12,14 +12,13 @@ export type Tool = {
   description: string;
   // Per-tool accent color (Tailwind-compatible CSS values).
   accent: string;
-  // Live editable demo URL. Set via env in production.
-  demoUrl: string;
+  // Internal route the "Launch" button navigates to.
+  href: string;
   // Short feature bullets shown on the card.
   highlights: string[];
+  // Whether the tool's demo is live yet (vs. a "being set up" placeholder).
+  ready: boolean;
 };
-
-const env = (key: string, fallback: string) =>
-  process.env[key]?.trim() || fallback;
 
 export const tools: Tool[] = [
   {
@@ -29,12 +28,13 @@ export const tools: Tool[] = [
     description:
       "Lightweight work planning that keeps every team aligned on what ships this week — boards, tasks, and owners without the overhead.",
     accent: "#6366f1",
-    demoUrl: env("NEXT_PUBLIC_TUESDAY_DEMO_URL", "https://tuesday.example.com"),
+    href: "/tuesday",
     highlights: [
       "Boards & tasks that map to how teams actually work",
       "Clear owners and due dates, zero ceremony",
       "Spin up a populated workspace in one click",
     ],
+    ready: false,
   },
   {
     slug: "systemready",
@@ -43,15 +43,13 @@ export const tools: Tool[] = [
     description:
       "Construction commissioning and punch-list management built for the field — track defects from raised to verified across contractors and disciplines.",
     accent: "#0ea5e9",
-    demoUrl: env(
-      "NEXT_PUBLIC_SYSTEMREADY_DEMO_URL",
-      "https://systemready.example.com",
-    ),
+    href: "/systemready",
     highlights: [
       "Full punch lifecycle: open → ready → verified",
       "Scoped by company, project, area, and discipline",
       "Realistic seeded jobsite to explore right away",
     ],
+    ready: false,
   },
   {
     slug: "docktrail",
@@ -60,14 +58,15 @@ export const tools: Tool[] = [
     description:
       "Operational tracking for docks and logistics — keep an auditable trail of arrivals, handovers, and status so nothing slips between shifts.",
     accent: "#10b981",
-    demoUrl: env(
-      "NEXT_PUBLIC_DOCKTRAIL_DEMO_URL",
-      "https://docktrail.example.com",
-    ),
+    href: "/docktrail",
     highlights: [
       "A clean, auditable activity trail",
       "Status at a glance across every lane",
       "Jump into a live, pre-filled sandbox",
     ],
+    ready: false,
   },
 ];
+
+export const toolBySlug = (slug: string) =>
+  tools.find((t) => t.slug === slug);

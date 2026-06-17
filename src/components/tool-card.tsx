@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Tool } from "@/lib/tools";
 
 export function ToolCard({ tool }: { tool: Tool }) {
@@ -44,18 +45,16 @@ export function ToolCard({ tool }: { tool: Tool }) {
         ))}
       </ul>
 
-      <a
-        href={tool.demoUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <Link
+        href={tool.href}
         className="mt-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white transition group-hover:brightness-110"
         style={{ background: tool.accent }}
       >
-        Launch interactive demo
+        {tool.ready ? "Launch interactive demo" : "Preview"}
         <span aria-hidden className="transition group-hover:translate-x-0.5">
           →
         </span>
-      </a>
+      </Link>
     </article>
   );
 }
